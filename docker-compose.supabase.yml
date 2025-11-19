@@ -1,0 +1,22 @@
+services:
+  # Next.js App with Supabase
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sari-app
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env.local
+    environment:
+      - NODE_ENV=production
+      - NEXT_TELEMETRY_DISABLED=1
+    restart: unless-stopped
+    # Remove healthcheck to avoid dependency issues
+    healthcheck:
+      disable: true
+
+networks:
+  default:
+    driver: bridge

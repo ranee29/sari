@@ -1,0 +1,50 @@
+services:
+  # Next.js App with Supabase
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sari-app
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env.local
+    environment:
+      - NODE_ENV=production
+      - NEXT_TELEMETRY_DISABLED=1
+    restart: unless-stopped
+
+# Optional: PostgreSQL Database (for local development)
+# Comment out the entire section below if using Supabase
+#  db:
+#    image: postgres:15
+#    container_name: sari-db
+#    ports:
+#      - "54322:5432"
+#    environment:
+#      - POSTGRES_DB=postgres
+#      - POSTGRES_USER=postgres
+#      - POSTGRES_PASSWORD=postgres
+#    volumes:
+#      - postgres_data:/var/lib/postgresql/data
+#      - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+#    restart: unless-stopped
+#    profiles:
+#      - localdev
+#
+# Optional: Redis (for sessions/caching)
+# Comment out the entire section below if not needed
+#  redis:
+#    image: redis:7.2-alpine
+#    container_name: sari-redis
+#    ports:
+#      - "6379:6379"
+#    volumes:
+#      - redis_data:/data
+#    restart: unless-stopped
+#    profiles:
+#      - localdev
+
+# volumes:
+#  postgres_data:
+#  redis_data:

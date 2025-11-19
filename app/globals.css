@@ -1,0 +1,304 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222.2 84% 4.9%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 222.2 84% 4.9%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+    --radius: 0.5rem;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-bg-300 text-text-primary font-sans;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    @apply w-2;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-bg-200;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-bg-400 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-bg-500;
+  }
+}
+
+@layer components {
+  /* Mobile-first container */
+  .container {
+    @apply px-4 sm:px-6 lg:px-8 xl:px-12 mx-auto;
+  }
+
+  /* Primary button with custom green color */
+  .btn-primary {
+    @apply bg-primary-500 hover:bg-primary-600 text-white font-medium py-3 px-6 rounded-xl transition-all duration-200 active:scale-95 shadow-soft hover:shadow-medium focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
+  }
+
+  /* Accent button with custom purple color */
+  .btn-accent {
+    @apply bg-secondary-500 hover:bg-secondary-600 text-white font-medium py-3 px-6 rounded-xl transition-all duration-200 active:scale-95 shadow-soft hover:shadow-medium focus:outline-none focus:ring-2 focus:ring-secondary-500 focus:ring-offset-2;
+  }
+
+  /* Secondary button */
+  .btn-secondary {
+    @apply bg-bg-100 hover:bg-bg-200 text-text-primary font-medium py-3 px-6 rounded-xl transition-all duration-200 border border-bg-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
+  }
+
+  /* Outline button */
+  .btn-outline {
+    @apply border-2 border-primary-500 text-primary-500 hover:bg-primary-50 font-medium py-3 px-6 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
+  }
+
+  /* Ghost button */
+  .btn-ghost {
+    @apply text-text-primary hover:bg-bg-200 font-medium py-2 px-4 rounded-lg transition-all duration-200;
+  }
+
+  /* Input fields */
+  .input {
+    @apply w-full px-4 py-3 bg-bg-100 border border-bg-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 placeholder:text-text-muted;
+  }
+
+  /* Select field */
+  .select {
+    @apply w-full px-4 py-3 bg-bg-100 border border-bg-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 appearance-none;
+  }
+
+  /* Textarea */
+  .textarea {
+    @apply w-full px-4 py-3 bg-bg-100 border border-bg-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 placeholder:text-text-muted resize-none;
+  }
+
+  /* Card component */
+  .card {
+    @apply bg-white rounded-2xl shadow-soft border border-bg-300 overflow-hidden;
+  }
+
+  .card-hover {
+    @apply transition-all duration-200 hover:shadow-medium hover:-translate-y-1;
+  }
+
+  /* Badge component */
+  .badge {
+    @apply inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium;
+  }
+
+  .badge-success {
+    @apply bg-success-100 text-success-700;
+  }
+
+  .badge-warning {
+    @apply bg-warning-100 text-warning-700;
+  }
+
+  .badge-error {
+    @apply bg-error-100 text-error-700;
+  }
+
+  .badge-info {
+    @apply bg-primary-100 text-primary-700;
+  }
+
+  /* Mobile nav active state */
+  .nav-item-active {
+    @apply text-primary-500 bg-primary-50;
+  }
+
+  /* Mobile bottom nav */
+  .mobile-nav {
+    @apply fixed bottom-0 left-0 right-0 bg-white border-t border-bg-200 px-4 py-2 z-50;
+  }
+
+  /* Table styles */
+  .table-container {
+    @apply overflow-x-auto bg-white rounded-2xl shadow-soft;
+  }
+
+  .table {
+    @apply w-full;
+  }
+
+  .table th {
+    @apply px-6 py-4 text-left text-xs font-medium text-text-secondary uppercase tracking-wider bg-bg-100;
+  }
+
+  .table td {
+    @apply px-6 py-4 whitespace-nowrap text-sm text-text-primary border-t border-bg-100;
+  }
+
+  /* Loading spinner */
+  .spinner {
+    @apply inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin;
+  }
+
+  /* Mobile responsive table */
+  .mobile-table-card {
+    @apply md:hidden bg-white p-4 rounded-xl shadow-soft border border-bg-200;
+  }
+
+  /* Form field wrapper */
+  .form-field {
+    @apply space-y-2;
+  }
+
+  .form-label {
+    @apply block text-sm font-medium text-text-primary;
+  }
+
+  .form-error {
+    @apply text-sm text-error-600 mt-1;
+  }
+
+  /* Status indicators */
+  .status-pending {
+    @apply badge-warning;
+  }
+
+  .status-paid {
+    @apply badge-info;
+  }
+
+  .status-ready_for_pickup {
+    @apply badge bg-secondary-100 text-secondary-700;
+  }
+
+  .status-completed {
+    @apply badge-success;
+  }
+
+  .status-cancelled {
+    @apply badge-error;
+  }
+
+  /* Stock indicators */
+  .stock-high {
+    @apply text-success-600;
+  }
+
+  .stock-medium {
+    @apply text-warning-600;
+  }
+
+  .stock-low {
+    @apply text-error-600;
+  }
+
+  .stock-out {
+    @apply text-error-600 font-medium;
+  }
+
+  /* Heading styles */
+  .heading-1 {
+    @apply text-3xl font-bold text-text-primary sm:text-4xl lg:text-5xl;
+  }
+
+  .heading-2 {
+    @apply text-2xl font-bold text-text-primary sm:text-3xl lg:text-4xl;
+  }
+
+  .heading-3 {
+    @apply text-xl font-bold text-text-primary sm:text-2xl lg:text-3xl;
+  }
+
+  .heading-4 {
+    @apply text-lg font-semibold text-text-primary sm:text-xl lg:text-2xl;
+  }
+
+  /* Text styles */
+  .text-body {
+    @apply text-base text-text-secondary leading-relaxed;
+  }
+
+  .text-caption {
+    @apply text-sm text-text-muted;
+  }
+
+  /* Grid layouts */
+  .grid-product {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4;
+  }
+
+  .grid-dashboard {
+    @apply grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6;
+  }
+
+  /* Animations */
+  .fade-in {
+    @apply animate-fade-in;
+  }
+
+  .slide-up {
+    @apply animate-slide-up;
+  }
+
+  .slide-down {
+    @apply animate-slide-down;
+  }
+
+  .scale-in {
+    @apply animate-scale-in;
+  }
+}
+
+@layer utilities {
+  /* Text utilities with custom colors */
+  .text-gradient {
+    @apply bg-gradient-to-r from-primary-500 to-secondary-500 bg-clip-text text-transparent;
+  }
+
+  /* Custom focus styles */
+  .focus-ring {
+    @apply focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
+  }
+
+  /* Safe area padding for mobile */
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* Hide scrollbars but keep functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}

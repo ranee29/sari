@@ -1,0 +1,123 @@
+_format_version: "3.0"
+
+_transform: true
+
+services:
+  - name: auth-v1-open
+    url: http://auth:9998/verify
+    routes:
+      - name: auth-v1-open
+        methods: [GET, POST]
+        paths: ["/auth/v1/verify"]
+        strip_path: false
+
+  - name: auth-v1-authorize
+    url: http://auth:9998/authorize
+    routes:
+      - name: auth-v1-authorize
+        methods: [GET, POST]
+        paths: ["/auth/v1/authorize"]
+        strip_path: false
+
+  - name: auth-v1-token
+    url: http://auth:9998/token
+    routes:
+      - name: auth-v1-token
+        methods: [GET, POST]
+        paths: ["/auth/v1/token"]
+        strip_path: false
+
+  - name: auth-v1-recover
+    url: http://auth:9998/recover
+    routes:
+      - name: auth-v1-recover
+        methods: [GET, POST]
+        paths: ["/auth/v1/recover"]
+        strip_path: false
+
+  - name: auth-v1-user
+    url: http://auth:9998/user
+    routes:
+      - name: auth-v1-user
+        methods: [GET, POST, PUT, DELETE]
+        paths: ["/auth/v1/user"]
+        strip_path: false
+
+  - name: auth-v1-users
+    url: http://auth:9998/users
+    routes:
+      - name: auth-v1-users
+        methods: [POST, GET, PUT, DELETE]
+        paths: ["/auth/v1/users"]
+        strip_path: false
+
+  - name: auth-v1-settings
+    url: http://auth:9998/settings
+    routes:
+      - name: auth-v1-settings
+        methods: [GET, POST]
+        paths: ["/auth/v1/settings"]
+        strip_path: false
+
+  - name: auth-v1-admin
+    url: http://auth:9998/admin
+    routes:
+      - name: auth-v1-admin
+        methods: [GET, POST]
+        paths: ["/auth/v1/admin"]
+        strip_path: false
+
+  - name: rest-v1
+    url: http://rest:3000/
+    routes:
+      - name: rest-v1
+        methods: [ANY]
+        paths: ["/rest/v1/"]
+        strip_path: false
+
+  - name: realtime-v1
+    url: http://realtime:3000/
+    routes:
+      - name: realtime-v1
+        methods: [ANY]
+        paths: ["/realtime/v1/"]
+        strip_path: false
+
+  - name: storage-v1
+    url: http://storage:3333/
+    routes:
+      - name: storage-v1
+        methods: [ANY]
+        paths: ["/storage/v1/"]
+        strip_path: false
+
+  - name: functions-v1
+    url: http://functions:9000/
+    routes:
+      - name: functions-v1
+        methods: [ANY]
+        paths: ["/functions/v1/"]
+        strip_path: false
+
+  - name: replication-v1
+    url: http://replication:3000/
+    routes:
+      - name: replication-v1
+        methods: [ANY]
+        paths: ["/replication/v1/"]
+        strip_path: false
+
+plugins:
+  - name: cors
+    config:
+      origins: ["*"]
+      methods: ["HEAD", "GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
+      headers: ["accept", "authorization", "content-type", "apikey", "x-client-info"]
+      exposed_headers: []
+      credentials: true
+      max_age: 86400
+      preflight_continue: false
+  - name: request-id
+  - name: prometheus
+    config:
+      per_consumer: true
