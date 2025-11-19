@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
-import { getUserProfile } from '@/lib/auth/config'
+import { createClient, getUserProfile } from '@/lib/supabase/server'
+import AdminSidebar from './AdminSidebar'
 
 export default async function AdminLayout({
   children,
@@ -23,5 +23,12 @@ export default async function AdminLayout({
     redirect('/dashboard') // Redirect non-admin users to customer dashboard
   }
 
-  return <>{children}</>
+  return (
+    <div className="flex h-screen bg-background-light">
+      <AdminSidebar />
+      <main className="ml-[240px] flex-1 bg-background-light dark:bg-background-dark overflow-auto">
+        {children}
+      </main>
+    </div>
+  )
 }
