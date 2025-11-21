@@ -59,17 +59,17 @@ export default function ProductsList({ initialProducts }: ProductsListProps) {
   }
 
   return (
-    <div className="p-8">
+    <div className="p-4 sm:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header with Actions */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
           <div className="mb-4 sm:mb-0">
-            <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">Products Management</h2>
-            <p className="mt-1 text-gray-600 dark:text-gray-400">Manage your product inventory</p>
+            <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white">Products Management</h2>
+            <p className="mt-1 text-sm sm:text-base text-gray-600 dark:text-gray-400">Manage your product inventory</p>
           </div>
           <Button
             onClick={() => setIsModalOpen(true)}
-            className="btn-primary"
+            className="btn-primary w-full sm:w-auto"
           >
             <Plus className="w-4 h-4 mr-2" />
             Add Product
@@ -93,7 +93,7 @@ export default function ProductsList({ initialProducts }: ProductsListProps) {
             <select
               value={filterCategory}
               onChange={(e) => setFilterCategory(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-800"
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-800 text-sm"
             >
               <option value="all">All Categories</option>
               {categories.map((category) => (
@@ -102,26 +102,83 @@ export default function ProductsList({ initialProducts }: ProductsListProps) {
                 </option>
               ))}
             </select>
-            <Button variant="outline" className="flex items-center gap-2">
+            <Button variant="outline" className="flex items-center gap-2 px-3 py-2">
               <Filter className="w-4 h-4" />
-              Sort
+              <span className="hidden sm:inline">Sort</span>
             </Button>
           </div>
         </div>
 
-        {/* Products Table */}
-        <div className="overflow-x-auto">
+        {/* Mobile Product Cards */}
+        <div className="block sm:hidden space-y-4 mb-6">
+          {filteredProducts.map((product) => (
+            <div key={product.id} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  <Package className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                  <h3 className="font-medium text-gray-900 dark:text-white truncate">{product.name}</h3>
+                </div>
+                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(product.status)} ml-2 flex-shrink-0`}>
+                  {product.status}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 mb-3">
+                <div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Type</p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">{product.type}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Stock</p>
+                  <p className={`text-sm font-medium ${
+                    product.stock === 0 ? 'text-red-600 dark:text-red-400' :
+                    product.stock <= 10 ? 'text-yellow-600 dark:text-yellow-400' :
+                    'text-green-600 dark:text-green-400'
+                  }`}>
+                    {product.stock}
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 mb-3">
+                <div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Price</p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">₱{product.price.toFixed(2)}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Cost</p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">₱{product.cost.toFixed(2)}</p>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between pt-3 border-t border-gray-100 dark:border-gray-700">
+                <p className="text-xs text-gray-500 dark:text-gray-400">{product.created_at}</p>
+                <div className="flex items-center gap-1">
+                  <Button variant="ghost" size="sm" className="p-1 h-8 w-8">
+                    <Edit className="w-4 h-4" />
+                  </Button>
+                  <Button variant="ghost" size="sm" className="p-1 h-8 w-8 text-red-600 hover:text-red-700">
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Desktop Products Table */}
+        <div className="hidden sm:block overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b border-gray-200 dark:border-gray-700">
-                <th className="text-left py-3 px-4 font-semibold text-gray-900 dark:text-white">Name</th>
-                <th className="text-left py-3 px-4 font-semibold text-gray-900 dark:text-white">Type</th>
-                <th className="text-left py-3 px-4 font-semibold text-gray-900 dark:text-white">Price</th>
-                <th className="text-left py-3 px-4 font-semibold text-gray-900 dark:text-white">Cost</th>
-                <th className="text-left py-3 px-4 font-semibold text-gray-900 dark:text-white">Stock</th>
-                <th className="text-left py-3 px-4 font-semibold text-gray-900 dark:text-white">Status</th>
-                <th className="text-left py-3 px-4 font-semibold text-gray-900 dark:text-white">Created</th>
-                <th className="text-left py-3 px-4 font-semibold text-gray-900 dark:text-white">Actions</th>
+                <th className="text-left py-3 px-4 font-semibold text-gray-900 dark:text-white text-sm">Name</th>
+                <th className="text-left py-3 px-4 font-semibold text-gray-900 dark:text-white text-sm">Type</th>
+                <th className="text-left py-3 px-4 font-semibold text-gray-900 dark:text-white text-sm">Price</th>
+                <th className="text-left py-3 px-4 font-semibold text-gray-900 dark:text-white text-sm">Cost</th>
+                <th className="text-left py-3 px-4 font-semibold text-gray-900 dark:text-white text-sm">Stock</th>
+                <th className="text-left py-3 px-4 font-semibold text-gray-900 dark:text-white text-sm">Status</th>
+                <th className="text-left py-3 px-4 font-semibold text-gray-900 dark:text-white text-sm">Created</th>
+                <th className="text-left py-3 px-4 font-semibold text-gray-900 dark:text-white text-sm">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -133,11 +190,11 @@ export default function ProductsList({ initialProducts }: ProductsListProps) {
                       <span className="font-medium text-gray-900 dark:text-white">{product.name}</span>
                     </div>
                   </td>
-                  <td className="py-3 px-4 text-gray-600 dark:text-gray-400">{product.type}</td>
-                  <td className="py-3 px-4 text-gray-900 dark:text-white">₱{product.price.toFixed(2)}</td>
-                  <td className="py-3 px-4 text-gray-900 dark:text-white">₱{product.cost.toFixed(2)}</td>
+                  <td className="py-3 px-4 text-gray-600 dark:text-gray-400 text-sm">{product.type}</td>
+                  <td className="py-3 px-4 text-gray-900 dark:text-white text-sm">₱{product.price.toFixed(2)}</td>
+                  <td className="py-3 px-4 text-gray-900 dark:text-white text-sm">₱{product.cost.toFixed(2)}</td>
                   <td className="py-3 px-4">
-                    <span className={`font-medium ${
+                    <span className={`font-medium text-sm ${
                       product.stock === 0 ? 'text-red-600 dark:text-red-400' :
                       product.stock <= 10 ? 'text-yellow-600 dark:text-yellow-400' :
                       'text-green-600 dark:text-green-400'
@@ -150,7 +207,7 @@ export default function ProductsList({ initialProducts }: ProductsListProps) {
                       {product.status}
                     </span>
                   </td>
-                  <td className="py-3 px-4 text-gray-600 dark:text-gray-400">{product.created_at}</td>
+                  <td className="py-3 px-4 text-gray-600 dark:text-gray-400 text-sm">{product.created_at}</td>
                   <td className="py-3 px-4">
                     <div className="flex items-center gap-2">
                       <Button variant="ghost" size="sm" className="p-1">
@@ -168,9 +225,9 @@ export default function ProductsList({ initialProducts }: ProductsListProps) {
         </div>
 
         {filteredProducts.length === 0 && (
-          <div className="text-center py-12">
-            <Package className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-500 dark:text-gray-400">No products found</p>
+          <div className="text-center py-8 sm:py-12">
+            <Package className="w-8 h-8 sm:w-12 sm:h-12 text-gray-400 mx-auto mb-4" />
+            <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400">No products found</p>
             <Button onClick={() => setIsModalOpen(true)} className="mt-4">
               Add your first product
             </Button>

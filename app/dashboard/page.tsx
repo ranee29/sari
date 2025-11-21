@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient, getUserProfile } from '@/lib/supabase/server'
-import CustomerDashboardClient from './CustomerDashboardClient'
+import DashboardLayout from './layout'
+import CustomerDashboardContent from './CustomerDashboardClient'
 
 export default async function DashboardPage() {
   const supabase = createClient()
@@ -29,5 +30,9 @@ export default async function DashboardPage() {
 
   console.log('Dashboard: Rendering customer dashboard')
   // Render customer dashboard for customer users
-  return <CustomerDashboardClient />
+  return (
+    <DashboardLayout>
+      <CustomerDashboardContent />
+    </DashboardLayout>
+  )
 }

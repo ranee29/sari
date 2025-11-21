@@ -292,6 +292,35 @@
     padding-bottom: env(safe-area-inset-bottom);
   }
 
+  /* Mobile-friendly touch targets */
+  .touch-target {
+    @apply min-h-[44px] min-w-[44px] flex items-center justify-center;
+  }
+
+  /* Mobile-friendly form elements */
+  input[type="text"], input[type="email"], input[type="password"],
+  input[type="number"], input[type="tel"], input[type="url"],
+  input[type="search"], select, textarea {
+    @apply text-base;
+    min-height: 44px;
+  }
+
+  /* Mobile-friendly buttons */
+  button {
+    @apply min-h-[44px];
+  }
+
+  /* Better mobile focus styles */
+  @media (hover: none) and (pointer: coarse) {
+    button:hover, a:hover {
+      @apply scale-100;
+    }
+
+    button:active, a:active {
+      @apply scale-95;
+    }
+  }
+
   /* Hide scrollbars but keep functionality */
   .scrollbar-hide {
     -ms-overflow-style: none;

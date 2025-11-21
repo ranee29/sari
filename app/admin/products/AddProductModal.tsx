@@ -145,7 +145,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
       {/* Backdrop */}
       <div
         className="fixed inset-0 bg-black/60 backdrop-blur-sm"
@@ -154,27 +154,27 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
       />
 
       {/* Modal Container */}
-      <div className="relative w-full max-w-2xl max-h-[90vh] flex flex-col bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+      <div className="relative w-full max-w-2xl max-h-[90vh] sm:max-h-[85vh] flex flex-col bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden my-4 sm:my-auto">
         {/* Modal Content with Scroll */}
         <div className="flex flex-col max-h-full overflow-hidden">
           {/* Sticky Header */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex-shrink-0">
-            <div>
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Add New Product</h3>
-              <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">Fill in the details below to add a new product to your inventory</p>
+          <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex-shrink-0">
+            <div className="pr-12 sm:pr-0">
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">Add New Product</h3>
+              <p className="mt-1 text-sm text-gray-600 dark:text-gray-400 hidden sm:block">Fill in the details below to add a new product to your inventory</p>
             </div>
             <button
               onClick={onClose}
-              className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-all hover:scale-105 flex-shrink-0"
+              className="p-2 sm:p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-all hover:scale-105 flex-shrink-0"
               aria-label="Close modal"
             >
-              <X className="w-6 h-6" />
+              <X className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
           </div>
 
           {/* Scrollable Form Content */}
           <div className="flex-1 overflow-y-auto">
-            <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-6">
+            <form onSubmit={handleSubmit(onSubmit)} className="p-4 sm:p-6 space-y-4 sm:space-y-6">
             {/* Product Name */}
             <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -234,7 +234,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
             </div>
 
             {/* Cost and Price */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                   Cost (Your Purchase Price) <span className="text-red-500">*</span>
@@ -308,22 +308,22 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
             )}
 
             {/* Action Buttons */}
-            <div className="flex gap-4 pt-6 pb-2 border-t border-gray-200 dark:border-gray-700">
+            <div className="flex gap-3 sm:gap-4 pt-4 sm:pt-6 pb-2 border-t border-gray-200 dark:border-gray-700">
               <Button
                 type="button"
                 variant="outline"
                 onClick={onClose}
                 disabled={loading}
-                className="flex-1 h-11 font-medium"
+                className="flex-1 h-10 sm:h-11 font-medium"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
                 disabled={loading}
-                className="flex-1 h-11 font-medium btn-primary"
+                className="flex-1 h-10 sm:h-11 font-medium btn-primary"
               >
-                {loading ? 'Adding Product...' : 'Save Product'}
+                {loading ? 'Adding...' : 'Save Product'}
               </Button>
             </div>
           </form>
