@@ -1,11 +1,11 @@
 import AdminHeader from '../AdminHeader'
-import ProductsList from './ProductsList'
+import ProductsListServer from './ProductsListServer'
 
 export default function ProductsPage() {
   return (
     <>
       <AdminHeader title="Products" />
-      <ProductsList />
+      <ProductsListServer />
     </>
   )
 }

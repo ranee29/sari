@@ -1,24 +1,49 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Plus, Search, Filter, MoreHorizontal, Package, Edit, Trash2, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import AddProductModal from './AddProductModal'
 
-export default function ProductsList() {
+interface Product {
+  id: string
+  name: string
+  type: string
+  description: string | null
+  price: number
+  cost: number
+  stock: number
+  status: string
+  created_at: string
+  updated_at?: string
+}
+
+interface ProductsListProps {
+  initialProducts: Product[]
+}
+
+export default function ProductsList({ initialProducts }: ProductsListProps) {
   const [searchTerm, setSearchTerm] = useState('')
   const [filterCategory, setFilterCategory] = useState('all')
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [products, setProducts] = useState<Product[]>(initialProducts)
 
-  // Mock data - replace with real data from your database
-  const products = [
-    { id: 1, name: 'Fresh Tomatoes', type: 'Vegetables', price: 45, cost: 25, stock: 50, status: 'In Stock', createdAt: '2024-01-15' },
-    { id: 2, name: 'Organic Lettuce', type: 'Vegetables', price: 35, cost: 20, stock: 3, status: 'Low Stock', createdAt: '2024-01-14' },
-    { id: 3, name: 'Free-Range Eggs', type: 'Dairy', price: 120, cost: 80, stock: 0, status: 'Out of Stock', createdAt: '2024-01-13' },
-    { id: 4, name: 'Whole Milk', type: 'Dairy', price: 65, cost: 45, stock: 25, status: 'In Stock', createdAt: '2024-01-12' },
-    { id: 5, name: 'Fresh Apples', type: 'Fruits', price: 180, cost: 120, stock: 15, status: 'In Stock', createdAt: '2024-01-11' },
-  ]
+  // Get unique categories from products
+  const categories = useMemo(() => {
+    const uniqueTypes = Array.from(new Set(products.map(p => p.type)))
+    return uniqueTypes
+  }, [products])
+
+  // Filter products based on search and category
+  const filteredProducts = useMemo(() => {
+    return products.filter(product => {
+      const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           product.type.toLowerCase().includes(searchTerm.toLowerCase())
+      const matchesCategory = filterCategory === 'all' || product.type === filterCategory
+      return matchesSearch && matchesCategory
+    })
+  }, [products, searchTerm, filterCategory])
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -32,13 +57,6 @@ export default function ProductsList() {
         return 'bg-gray-100 text-gray-800 dark:bg-gray-900/50 dark:text-gray-400'
     }
   }
-
-  const filteredProducts = products.filter(product => {
-    const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         product.type.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesCategory = filterCategory === 'all' || product.type === filterCategory
-    return matchesSearch && matchesCategory
-  })
 
   return (
     <div className="p-8">
@@ -78,10 +96,11 @@ export default function ProductsList() {
               className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-800"
             >
               <option value="all">All Categories</option>
-              <option value="Vegetables">Vegetables</option>
-              <option value="Fruits">Fruits</option>
-              <option value="Dairy">Dairy</option>
-              <option value="Meat">Meat</option>
+              {categories.map((category) => (
+                <option key={category} value={category}>
+                  {category}
+                </option>
+              ))}
             </select>
             <Button variant="outline" className="flex items-center gap-2">
               <Filter className="w-4 h-4" />
@@ -115,8 +134,8 @@ export default function ProductsList() {
                     </div>
                   </td>
                   <td className="py-3 px-4 text-gray-600 dark:text-gray-400">{product.type}</td>
-                  <td className="py-3 px-4 text-gray-900 dark:text-white">₱{product.price}</td>
-                  <td className="py-3 px-4 text-gray-900 dark:text-white">₱{product.cost}</td>
+                  <td className="py-3 px-4 text-gray-900 dark:text-white">₱{product.price.toFixed(2)}</td>
+                  <td className="py-3 px-4 text-gray-900 dark:text-white">₱{product.cost.toFixed(2)}</td>
                   <td className="py-3 px-4">
                     <span className={`font-medium ${
                       product.stock === 0 ? 'text-red-600 dark:text-red-400' :
@@ -131,7 +150,7 @@ export default function ProductsList() {
                       {product.status}
                     </span>
                   </td>
-                  <td className="py-3 px-4 text-gray-600 dark:text-gray-400">{product.createdAt}</td>
+                  <td className="py-3 px-4 text-gray-600 dark:text-gray-400">{product.created_at}</td>
                   <td className="py-3 px-4">
                     <div className="flex items-center gap-2">
                       <Button variant="ghost" size="sm" className="p-1">
@@ -162,10 +181,27 @@ export default function ProductsList() {
         <AddProductModal
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
-          onSuccess={() => {
+          onSuccess={async (newProduct) => {
             setIsModalOpen(false)
-            // Here you would typically refresh the products list
-            console.log('Product added successfully - refresh list')
+
+            // Refresh products from server
+            try {
+              const response = await fetch('/api/admin/products/refresh', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+              })
+
+              if (response.ok) {
+                const { products: refreshedProducts } = await response.json()
+                setProducts(refreshedProducts)
+              }
+            } catch (error) {
+              console.error('Error refreshing products:', error)
+              // Fallback: refresh the page
+              window.location.reload()
+            }
           }}
         />
       </div>

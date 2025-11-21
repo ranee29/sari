@@ -26,11 +26,13 @@ type ProductFormData = z.infer<typeof productSchema>
 interface AddProductModalProps {
   isOpen: boolean
   onClose: () => void
-  onSuccess: () => void
+  onSuccess: (product: any) => void
 }
 
 export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProductModalProps) {
   const [loading, setLoading] = useState(false)
+  const [productTypes, setProductTypes] = useState<Array<{ id: string; name: string }>>([])
+  const [loadingTypes, setLoadingTypes] = useState(false)
   const { toast } = useToast()
 
   const {
@@ -50,6 +52,31 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
       stock: 0,
     },
   })
+
+  // Fetch product types when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      fetchProductTypes()
+    }
+  }, [isOpen])
+
+  // Fetch product types from API
+  const fetchProductTypes = async () => {
+    setLoadingTypes(true)
+    try {
+      const response = await fetch('/api/admin/product-types')
+      if (response.ok) {
+        const data = await response.json()
+        setProductTypes(data.productTypes || [])
+      } else {
+        console.error('Failed to fetch product types')
+      }
+    } catch (error) {
+      console.error('Error fetching product types:', error)
+    } finally {
+      setLoadingTypes(false)
+    }
+  }
 
   // Reset form when modal opens
   useEffect(() => {
@@ -82,11 +109,20 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
     setLoading(true)
 
     try {
-      // Here you would make an API call to save the product
-      console.log('Creating product:', data)
+      // Make API call to save the product
+      const response = await fetch('/api/admin/products', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      })
 
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to add product')
+      }
 
       toast({
         title: 'Product added successfully',
@@ -94,7 +130,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
         variant: 'success',
       })
 
-      onSuccess()
+      onSuccess(result.product)
     } catch (error: any) {
       toast({
         title: 'Error adding product',
@@ -162,20 +198,24 @@ export default function AddProductModal({ isOpen, onClose, onSuccess }: AddProdu
                 {...register('type')}
                 className="w-full px-4 py-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all appearance-none text-base disabled:opacity-50"
                 defaultValue=""
-                disabled={loading}
+                disabled={loading || loadingTypes}
               >
-                <option value="" disabled>Select product type</option>
-                <option value="Vegetables">Vegetables</option>
-                <option value="Fruits">Fruits</option>
-                <option value="Dairy">Dairy</option>
-                <option value="Meat">Meat</option>
-                <option value="Seafood">Seafood</option>
-                <option value="Grains">Grains</option>
-                <option value="Beverages">Beverages</option>
-                <option value="Snacks">Snacks</option>
+                <option value="" disabled>
+                  {loadingTypes ? 'Loading product types...' : 'Select product type'}
+                </option>
+                {productTypes.map((type) => (
+                  <option key={type.id} value={type.name}>
+                    {type.name}
+                  </option>
+                ))}
               </select>
               {errors.type && (
                 <p className="text-sm text-red-600 mt-1">{errors.type.message}</p>
+              )}
+              {productTypes.length === 0 && !loadingTypes && (
+                <p className="text-sm text-yellow-600 mt-1">
+                  No product types found. Please add product types to your database first.
+                </p>
               )}
             </div>
 
