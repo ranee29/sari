@@ -69,18 +69,39 @@ export default function NewSaleClient() {
     product.type.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
-  // Add product to cart
+  // Add product to cart with stock validation
   const addToCart = (product: Product) => {
     const existingItem = cart.find(item => item.id === product.id)
 
     if (existingItem) {
+      // Check if adding one more would exceed stock
+      const newQuantity = existingItem.quantity + 1
+      if (newQuantity > product.stock) {
+        toast({
+          title: 'Insufficient Stock',
+          description: `Only ${product.stock} ${product.name} available in stock`,
+          variant: 'destructive',
+        })
+        return
+      }
+
       // Update quantity if item already in cart
       setCart(cart.map(item =>
         item.id === product.id
-          ? { ...item, quantity: item.quantity + 1, subtotal: (item.quantity + 1) * item.price }
+          ? { ...item, quantity: newQuantity, subtotal: newQuantity * item.price }
           : item
       ))
     } else {
+      // Check if product is in stock
+      if (product.stock < 1) {
+        toast({
+          title: 'Out of Stock',
+          description: `${product.name} is currently out of stock`,
+          variant: 'destructive',
+        })
+        return
+      }
+
       // Add new item to cart
       setCart([...cart, {
         ...product,
@@ -91,10 +112,23 @@ export default function NewSaleClient() {
     }
   }
 
-  // Update item quantity in cart
+  // Update item quantity in cart with stock validation
   const updateQuantity = (cartId: string, newQuantity: number) => {
     if (newQuantity < 1) {
       removeFromCart(cartId)
+      return
+    }
+
+    const cartItem = cart.find(item => item.cartId === cartId)
+    if (!cartItem) return
+
+    // Check if new quantity exceeds available stock
+    if (newQuantity > cartItem.stock) {
+      toast({
+        title: 'Insufficient Stock',
+        description: `Only ${cartItem.stock} ${cartItem.name} available in stock`,
+        variant: 'destructive',
+      })
       return
     }
 
@@ -128,6 +162,21 @@ export default function NewSaleClient() {
     setIsProcessing(true)
 
     try {
+      // Final stock validation before processing
+      const stockValidation = cart.filter(item => item.quantity > item.stock)
+      if (stockValidation.length > 0) {
+        const invalidItems = stockValidation.map(item =>
+          `${item.name} (requested: ${item.quantity}, available: ${item.stock})`
+        ).join(', ')
+
+        toast({
+          title: 'Stock Availability Changed',
+          description: `Some items no longer have sufficient stock: ${invalidItems}`,
+          variant: 'destructive',
+        })
+        return
+      }
+
       // Prepare bulk sales data
       const salesData = cart.map(item => ({
         product_id: item.id,
@@ -242,12 +291,12 @@ export default function NewSaleClient() {
               </div>
             </div>
 
-            <Button
+            <button
               onClick={() => setShowSuccess(false)}
-              className="w-full btn-primary"
+              className="w-full rounded-lg bg-green-500 py-2 font-semibold text-white transition hover:bg-green-600"
             >
               New Sale
-            </Button>
+            </button>
           </div>
         </div>
       </div>
@@ -255,13 +304,12 @@ export default function NewSaleClient() {
   }
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col lg:flex-row gap-6">
-          {/* Products Section */}
-          <div className="lg:w-2/3">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Products</h2>
+    <div className="min-h-screen p-4 lg:p-8 bg-background-light dark:bg-background-dark">
+      <div className="grid w-full max-w-6xl grid-cols-1 gap-8 lg:grid-cols-3">
+        {/* Products Section */}
+        <div className="lg:col-span-2">
+          <div className="rounded-lg bg-white p-6 shadow-sm dark:bg-zinc-900">
+              <h2 className="mb-4 text-xl font-semibold text-gray-900 dark:text-gray-100">Products</h2>
 
               {/* Search Bar */}
               <div className="relative mb-6">
@@ -275,7 +323,7 @@ export default function NewSaleClient() {
               </div>
 
               {/* Products Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-h-96 overflow-y-auto">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3">
                 {filteredProducts.map((product) => {
                   const isInCart = cart.some(item => item.id === product.id)
                   const cartItem = cart.find(item => item.id === product.id)
@@ -283,25 +331,25 @@ export default function NewSaleClient() {
                   return (
                     <div
                       key={product.id}
-                      className={`border rounded-lg p-4 cursor-pointer transition-all hover:shadow-md ${
-                        isInCart ? 'border-primary-500 bg-primary-50' : 'border-gray-200 hover:border-gray-300'
+                      className={`cursor-pointer rounded-lg border-2 p-4 transition-all hover:shadow-md ${
+                        isInCart
+                          ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
+                          : 'border-gray-200 bg-white hover:border-green-500 hover:shadow-md dark:border-zinc-700 dark:bg-zinc-900 dark:hover:border-green-500'
                       }`}
                       onClick={() => addToCart(product)}
                     >
-                      <div className="flex justify-between items-start mb-2">
-                        <h3 className="font-medium text-gray-900 line-clamp-2">{product.name}</h3>
+                      <div className="flex items-start justify-between">
+                        <h3 className="font-semibold text-gray-900 dark:text-gray-100">{product.name}</h3>
                         {isInCart && (
-                          <span className="text-xs bg-primary-500 text-white px-2 py-1 rounded-full">
+                          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-green-500 text-xs font-bold text-white">
                             {cartItem?.quantity || 0}
                           </span>
                         )}
                       </div>
-                      <p className="text-sm text-gray-500 mb-2">{product.type}</p>
-                      <div className="flex justify-between items-center">
-                        <span className="font-semibold text-lg">₱{product.price.toFixed(2)}</span>
-                        <span className={`text-sm ${product.stock <= 5 ? 'text-red-600' : 'text-green-600'}`}>
-                          Stock: {product.stock}
-                        </span>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">{product.type}</p>
+                      <div className="mt-4 flex items-center justify-between">
+                        <p className="font-bold text-gray-900 dark:text-gray-100">₱{product.price.toFixed(2)}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">Stock: {product.stock}</p>
                       </div>
                     </div>
                   )
@@ -317,12 +365,12 @@ export default function NewSaleClient() {
           </div>
 
           {/* Cart Section */}
-          <div className="lg:w-1/3">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 sticky top-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
-                <ShoppingCart className="w-5 h-5 mr-2" />
-                Cart ({cartTotalItems})
-              </h2>
+          <div className="lg:col-span-1">
+            <div className="rounded-lg bg-white p-6 shadow-sm dark:bg-zinc-900">
+              <div className="mb-6 flex items-center gap-2">
+                <ShoppingCart className="text-gray-600" />
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Cart ({cartTotalItems})</h2>
+              </div>
 
               {cart.length === 0 ? (
                 <div className="text-center py-8">
@@ -333,42 +381,52 @@ export default function NewSaleClient() {
               ) : (
                 <>
                   {/* Cart Items */}
-                  <div className="space-y-3 mb-6 max-h-64 overflow-y-auto">
+                  <div className="space-y-4 mb-6">
                     {cart.map((item) => (
-                      <div key={item.cartId} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-medium text-gray-900 truncate">{item.name}</h4>
-                          <p className="text-sm text-gray-500">₱{item.price.toFixed(2)} each</p>
+                      <div key={item.cartId} className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <p className="font-medium text-gray-900">{item.name}</p>
+                          <p className="text-sm text-gray-500">{item.quantity} x ₱{item.price.toFixed(2)}</p>
+                          <p className={`text-xs ${item.stock <= item.quantity ? 'text-red-600 font-medium' : 'text-gray-400'}`}>
+                            Stock: {item.stock} {item.stock <= item.quantity ? '(At Limit)' : ''}
+                          </p>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              updateQuantity(item.cartId, item.quantity - 1)
-                            }}
-                            className="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center"
-                          >
-                            -
-                          </button>
-                          <span className="w-8 text-center font-medium">{item.quantity}</span>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              updateQuantity(item.cartId, item.quantity + 1)
-                            }}
-                            className="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center"
-                          >
-                            +
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              removeFromCart(item.cartId)
-                            }}
-                            className="w-8 h-8 rounded-full bg-red-100 hover:bg-red-200 text-red-600 flex items-center justify-center ml-2"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
+                        <div className="flex items-center gap-4">
+                          <p className="font-semibold text-gray-900">₱{item.subtotal.toFixed(2)}</p>
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                updateQuantity(item.cartId, item.quantity - 1)
+                              }}
+                              className="flex h-7 w-7 items-center justify-center rounded-md bg-gray-100 text-gray-600 transition hover:bg-gray-200"
+                            >
+                              -
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                updateQuantity(item.cartId, item.quantity + 1)
+                              }}
+                              disabled={item.quantity >= item.stock}
+                              className={`flex h-7 w-7 items-center justify-center rounded-md transition ${
+                                item.quantity >= item.stock
+                                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                              }`}
+                            >
+                              +
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                removeFromCart(item.cartId)
+                              }}
+                              className="flex h-7 w-7 items-center justify-center rounded-md bg-red-100 text-red-500 transition hover:bg-red-200"
+                            >
+                              ×
+                            </button>
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -376,22 +434,22 @@ export default function NewSaleClient() {
 
                   {/* Payment Method Selection */}
                   <div className="mb-6">
-                    <label className="block text-sm font-medium text-gray-700 mb-3">Payment Method</label>
-                    <div className="grid grid-cols-2 gap-2">
+                    <h3 className="mb-3 text-sm font-medium text-gray-600">Payment Method</h3>
+                    <div className="grid grid-cols-2 gap-3">
                       {paymentMethods.map((method) => {
                         const Icon = method.icon
                         return (
                           <button
                             key={method.value}
                             onClick={() => setPaymentMethod(method.value)}
-                            className={`flex items-center gap-2 p-3 rounded-lg border-2 transition-all ${
+                            className={`flex items-center justify-center gap-2 rounded-md border-2 p-3 text-sm font-semibold transition ${
                               paymentMethod === method.value
-                                ? 'border-primary-500 bg-primary-50'
-                                : 'border-gray-200 hover:border-gray-300'
+                                ? 'border-green-500 bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400'
+                                : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50 dark:border-zinc-700 dark:hover:border-zinc-600 dark:hover:bg-zinc-800'
                             }`}
                           >
-                            <Icon className={`w-4 h-4 ${method.color}`} />
-                            <span className="text-sm font-medium">{method.label}</span>
+                            <Icon className="!text-xl" />
+                            {method.label}
                           </button>
                         )
                       })}
@@ -399,32 +457,31 @@ export default function NewSaleClient() {
                   </div>
 
                   {/* Total */}
-                  <div className="border-t pt-4 mb-6">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-gray-600">Subtotal ({cartTotalItems} items):</span>
-                      <span className="font-semibold">₱{cartTotal.toFixed(2)}</span>
+                  <div className="my-6 border-t border-gray-200"></div>
+                  <div className="space-y-3">
+                    <div className="flex justify-between text-sm text-gray-500">
+                      <p>Subtotal ({cartTotalItems} items):</p>
+                      <p className="font-medium text-gray-700">₱{cartTotal.toFixed(2)}</p>
                     </div>
-                    <div className="flex justify-between items-center text-lg">
-                      <span className="font-bold">Total:</span>
-                      <span className="font-bold text-primary-600">₱{cartTotal.toFixed(2)}</span>
+                    <div className="flex justify-between font-bold text-gray-800">
+                      <p>Total:</p>
+                      <p className="text-green-500">₱{cartTotal.toFixed(2)}</p>
                     </div>
                   </div>
 
                   {/* Process Sale Button */}
-                  <Button
+                  <button
                     onClick={processSale}
                     disabled={isProcessing || cart.length === 0}
-                    className="w-full btn-primary"
-                    size="lg"
+                    className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg bg-green-500 py-3 font-semibold text-white transition hover:bg-green-600 disabled:opacity-50 disabled:hover:bg-green-500"
                   >
-                    <ShoppingCart className="w-4 h-4 mr-2" />
+                    <ShoppingCart className="w-4 h-4" />
                     {isProcessing ? 'Processing...' : 'Process Sale'}
-                  </Button>
+                  </button>
                 </>
               )}
             </div>
           </div>
-        </div>
       </div>
     </div>
   )
