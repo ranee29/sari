@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, Package, Receipt, Calendar, Archive, Users, Settings, LogOut, Menu, X } from 'lucide-react'
+import { Home, Package, Receipt, Calendar, Archive, Users, Settings, LogOut, Menu, X, ShoppingCart, TrendingUp } from 'lucide-react'
 import { signOut } from '@/lib/auth/config'
 import { useRouter } from 'next/navigation'
 import { useToast } from '@/components/ui/use-toast'
@@ -90,6 +90,15 @@ export default function AdminSidebar() {
       icon: Package,
     },
     {
+      name: 'Sales',
+      href: '/admin/sales',
+      icon: ShoppingCart,
+      subItems: [
+        { name: 'New Sale', href: '/admin/sales/new' },
+        { name: 'Sales History', href: '/admin/sales/history' }
+      ]
+    },
+    {
       name: 'Orders',
       href: '/admin/orders',
       icon: Receipt,
@@ -125,15 +134,16 @@ export default function AdminSidebar() {
       ]
     },
     {
-      name: 'Reports (optional future)',
+      name: 'Reports',
       href: '/admin/reports',
-      icon: Receipt,
+      icon: TrendingUp,
       disabled: true
     },
     {
       name: 'Settings',
       href: '/admin/settings',
-      icon: Settings
+      icon: Settings,
+      disabled: true
     }
   ]
 

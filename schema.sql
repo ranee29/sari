@@ -48,14 +48,23 @@ create table orders (
   updated_at timestamptz default now()
 );
 
--- Items inside orders
-create table order_items (
+-- Sales records (individual items sold - simple and minimal)
+create table sales (
   id uuid default gen_random_uuid() primary key,
-  order_id uuid references orders(id) on delete cascade,
   product_id uuid references products(id),
   qty integer not null,
   unit_price decimal(10,2) not null,
   subtotal decimal(10,2) generated always as (qty * unit_price) stored,
+
+  -- Basic sale information
+  payment_method text default 'cash' check (payment_method in ('cash', 'card', 'mobile', 'other')),
+
+  -- Timestamps
+  sale_date timestamptz default now(),
+  created_at timestamptz default now(),
+  updated_at timestamptz default now(),
+
+  -- Constraints
   constraint check_qty_positive check (qty > 0),
   constraint check_unit_price_positive check (unit_price >= 0)
 );
