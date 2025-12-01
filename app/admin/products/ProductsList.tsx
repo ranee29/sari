@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { Plus, Search, Filter, MoreHorizontal, Package, Edit, Trash2, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -23,17 +23,44 @@ interface ProductsListProps {
   initialProducts: Product[]
 }
 
+interface ProductType {
+  id: string
+  name: string
+}
+
 export default function ProductsList({ initialProducts }: ProductsListProps) {
   const [searchTerm, setSearchTerm] = useState('')
   const [filterCategory, setFilterCategory] = useState('all')
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [products, setProducts] = useState<Product[]>(initialProducts)
+  const [productTypes, setProductTypes] = useState<ProductType[]>([])
+  const [isLoadingTypes, setIsLoadingTypes] = useState(true)
 
-  // Get unique categories from products
+  // Fetch product types from API
+  useEffect(() => {
+    const fetchProductTypes = async () => {
+      try {
+        const response = await fetch('/api/admin/product-types')
+        if (response.ok) {
+          const data = await response.json()
+          setProductTypes(data.productTypes || [])
+        } else {
+          console.error('Failed to fetch product types')
+        }
+      } catch (error) {
+        console.error('Error fetching product types:', error)
+      } finally {
+        setIsLoadingTypes(false)
+      }
+    }
+
+    fetchProductTypes()
+  }, [])
+
+  // Get unique categories from product types
   const categories = useMemo(() => {
-    const uniqueTypes = Array.from(new Set(products.map(p => p.type)))
-    return uniqueTypes
-  }, [products])
+    return productTypes.map(type => type.name)
+  }, [productTypes])
 
   // Filter products based on search and category
   const filteredProducts = useMemo(() => {
@@ -69,7 +96,7 @@ export default function ProductsList({ initialProducts }: ProductsListProps) {
           </div>
           <Button
             onClick={() => setIsModalOpen(true)}
-            className="btn-primary w-full sm:w-auto"
+            className="bg-green-500 hover:bg-green-600 text-white w-full sm:w-auto"
           >
             <Plus className="w-4 h-4 mr-2" />
             Add Product
@@ -93,14 +120,19 @@ export default function ProductsList({ initialProducts }: ProductsListProps) {
             <select
               value={filterCategory}
               onChange={(e) => setFilterCategory(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-800 text-sm"
+              disabled={isLoadingTypes}
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-800 text-sm disabled:opacity-50"
             >
               <option value="all">All Categories</option>
-              {categories.map((category) => (
-                <option key={category} value={category}>
-                  {category}
-                </option>
-              ))}
+              {isLoadingTypes ? (
+                <option value="">Loading categories...</option>
+              ) : (
+                categories.map((category) => (
+                  <option key={category} value={category}>
+                    {category}
+                  </option>
+                ))
+              )}
             </select>
             <Button variant="outline" className="flex items-center gap-2 px-3 py-2">
               <Filter className="w-4 h-4" />
@@ -243,19 +275,27 @@ export default function ProductsList({ initialProducts }: ProductsListProps) {
 
             // Refresh products from server
             try {
-              const response = await fetch('/api/admin/products/refresh', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-              })
+              const [productsResponse, typesResponse] = await Promise.all([
+                fetch('/api/admin/products/refresh', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                }),
+                fetch('/api/admin/product-types')
+              ])
 
-              if (response.ok) {
-                const { products: refreshedProducts } = await response.json()
+              if (productsResponse.ok) {
+                const { products: refreshedProducts } = await productsResponse.json()
                 setProducts(refreshedProducts)
               }
+
+              if (typesResponse.ok) {
+                const data = await typesResponse.json()
+                setProductTypes(data.productTypes || [])
+              }
             } catch (error) {
-              console.error('Error refreshing products:', error)
+              console.error('Error refreshing data:', error)
               // Fallback: refresh the page
               window.location.reload()
             }
