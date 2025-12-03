@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Bulk Product Adjustment</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<style type="text/tailwindcss">
+    .material-symbols-outlined {
+      font-variation-settings:
+      'FILL' 0,
+      'wght' 400,
+      'GRAD' 0,
+      'opsz' 24
+    }
+    </style>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#22c55e", // green-500
+                        "background-light": "#f8fafc", // slate-50
+                        "background-dark": "#1e293b", // slate-800
+                    },
+                    fontFamily: {
+                        display: ["Inter", "sans-serif"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "0.5rem", // 8px
+                    },
+                },
+            },
+        };
+    </script>
+</head>
+<body class="bg-slate-100 dark:bg-background-dark font-display flex items-center justify-center min-h-screen p-4">
+<div class="bg-white dark:bg-slate-900 rounded-lg shadow-2xl w-full max-w-6xl">
+<div class="p-6 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
+<div class="flex items-center gap-3">
+<h1 class="text-xl font-bold text-slate-800 dark:text-slate-100">Bulk Product Adjustment</h1>
+</div>
+<button class="text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full p-1.5">
+<span class="material-symbols-outlined text-2xl">close</span>
+</button>
+</div>
+<div class="p-6 space-y-6">
+<div class="flex flex-col md:flex-row gap-4 items-center">
+<div class="relative w-full md:flex-1">
+<div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+<span class="material-symbols-outlined text-slate-400">search</span>
+</div>
+<input class="w-full bg-slate-50 dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-lg pl-10 focus:ring-blue-500 focus:border-blue-500" placeholder="Search products..." type="text"/>
+</div>
+<div class="flex items-center gap-2 w-full md:w-auto">
+<button class="text-sm font-medium px-4 py-2 text-slate-700 dark:text-slate-200 bg-slate-200 dark:bg-slate-700 rounded-md hover:bg-slate-300 dark:hover:bg-slate-600">Show Selected (2)</button>
+<button class="text-sm font-medium px-4 py-2 text-white bg-green-500 rounded-md hover:bg-green-600">Select All</button>
+<button class="text-sm font-medium px-4 py-2 text-slate-700 dark:text-slate-200 bg-slate-200 dark:bg-slate-700 rounded-md hover:bg-slate-300 dark:hover:bg-slate-600">Deselect All</button>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-sm text-left">
+<thead class="text-xs text-slate-500 dark:text-slate-400 uppercase bg-slate-50 dark:bg-slate-800">
+<tr>
+<th class="p-3 w-10"><input checked="" class="rounded border-slate-400 text-blue-600 focus:ring-blue-500" type="checkbox"/></th>
+<th class="p-3 font-medium">Product</th>
+<th class="p-3 font-medium text-center">Current Stock</th>
+<th class="p-3 font-medium text-center">Stock Change</th>
+<th class="p-3 font-medium text-center">New Stock</th>
+<th class="p-3 font-medium text-right">Cost</th>
+<th class="p-3 font-medium text-right">Price</th>
+<th class="p-3 font-medium text-center">Status</th>
+<th class="p-3 font-medium">Notes</th>
+</tr>
+</thead>
+<tbody class="text-slate-800 dark:text-slate-200">
+<tr class="border-b border-slate-200 dark:border-slate-700">
+<td class="p-3"><input checked="" class="rounded border-slate-400 text-blue-600 focus:ring-blue-500" type="checkbox"/></td>
+<td class="p-3 font-semibold">CDO Karne Norte</td>
+<td class="p-3 text-center">9</td>
+<td class="p-3">
+<div class="flex items-center justify-center w-28 mx-auto">
+<button class="px-2 py-1 bg-slate-200 dark:bg-slate-700 rounded-l-md hover:bg-slate-300 dark:hover:bg-slate-600">-</button>
+<input class="w-12 text-center bg-white dark:bg-slate-800 border-y border-slate-200 dark:border-slate-700 focus:ring-0 focus:border-blue-500 text-green-600 dark:text-green-400 font-semibold" type="text" value="8"/>
+<button class="px-2 py-1 bg-slate-200 dark:bg-slate-700 rounded-r-md hover:bg-slate-300 dark:hover:bg-slate-600">+</button>
+</div>
+</td>
+<td class="p-3 text-center">
+<div class="font-bold text-blue-600 dark:text-blue-400">17</div>
+<div class="text-xs text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/30 px-2 py-0.5 rounded-full inline-block">In Stock</div>
+</td>
+<td class="p-3"><input class="w-24 ml-auto text-right bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600 rounded-md focus:ring-blue-500 focus:border-blue-500" type="text" value="20"/></td>
+<td class="p-3"><input class="w-24 ml-auto text-right bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600 rounded-md focus:ring-blue-500 focus:border-blue-500" type="text" value="32"/></td>
+<td class="p-3 text-center"><span class="material-symbols-outlined text-green-500">check_circle</span></td>
+<td class="p-3"><input class="w-32 bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600 rounded-md focus:ring-blue-500 focus:border-blue-500" placeholder="Optional notes" type="text"/></td>
+</tr>
+<tr class="border-b border-slate-200 dark:border-slate-700">
+<td class="p-3"><input checked="" class="rounded border-slate-400 text-blue-600 focus:ring-blue-500" type="checkbox"/></td>
+<td class="p-3 font-semibold">Mega Sardines</td>
+<td class="p-3 text-center">9</td>
+<td class="p-3">
+<div class="flex items-center justify-center w-28 mx-auto">
+<button class="px-2 py-1 bg-slate-200 dark:bg-slate-700 rounded-l-md hover:bg-slate-300 dark:hover:bg-slate-600">-</button>
+<input class="w-12 text-center bg-white dark:bg-slate-800 border-y border-slate-200 dark:border-slate-700 focus:ring-0 focus:border-blue-500 text-red-600 dark:text-red-400 font-semibold" type="text" value="-4"/>
+<button class="px-2 py-1 bg-slate-200 dark:bg-slate-700 rounded-r-md hover:bg-slate-300 dark:hover:bg-slate-600">+</button>
+</div>
+</td>
+<td class="p-3 text-center">
+<div class="font-bold text-blue-600 dark:text-blue-400">5</div>
+<div class="text-xs text-yellow-600 dark:text-yellow-400 bg-yellow-100 dark:bg-yellow-900/30 px-2 py-0.5 rounded-full inline-block">Low Stock</div>
+</td>
+<td class="p-3"><input class="w-24 ml-auto text-right bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600 rounded-md focus:ring-blue-500 focus:border-blue-500" type="text" value="15"/></td>
+<td class="p-3"><input class="w-24 ml-auto text-right bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600 rounded-md focus:ring-blue-500 focus:border-blue-500" type="text" value="20"/></td>
+<td class="p-3 text-center"><span class="material-symbols-outlined text-green-500">check_circle</span></td>
+<td class="p-3"><input class="w-32 bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600 rounded-md focus:ring-blue-500 focus:border-blue-500" placeholder="Optional notes" type="text"/></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="bg-yellow-50 dark:bg-yellow-500/10 p-4 rounded-lg border border-yellow-200 dark:border-yellow-500/20">
+<div class="flex flex-wrap items-center gap-x-6 gap-y-2">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-yellow-600 dark:text-yellow-400">info</span>
+<h3 class="text-base font-bold text-yellow-800 dark:text-yellow-200">Adjustment Summary</h3>
+</div>
+<div class="flex items-center gap-x-6 gap-y-2 text-sm text-slate-700 dark:text-slate-300">
+<div><span class="font-semibold">Selected products:</span> 2</div>
+<div><span class="font-semibold">With changes:</span> 2</div>
+<div><span class="font-semibold">Total stock change:</span> <span class="font-bold text-green-600 dark:text-green-400">+4</span></div>
+</div>
+</div>
+</div>
+</div>
+<div class="p-6 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-700 flex justify-between items-center rounded-b-lg">
+<button class="px-4 py-2 text-sm font-semibold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-600">Reset All</button>
+<div class="flex items-center gap-3">
+<button class="px-4 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-600">Cancel</button>
+<button class="px-6 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700">Apply Changes (2)</button>
+</div>
+</div>
+</div>
+</body></html>
