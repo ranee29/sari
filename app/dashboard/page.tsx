@@ -1,6 +1,5 @@
 import { redirect } from 'next/navigation'
 import { createClient, getUserProfile } from '@/lib/supabase/server'
-import DashboardLayout from './layout'
 import CustomerDashboardContent from './CustomerDashboardClient'
 
 export default async function DashboardPage() {
@@ -30,9 +29,6 @@ export default async function DashboardPage() {
 
   console.log('Dashboard: Rendering customer dashboard')
   // Render customer dashboard for customer users
-  return (
-    <DashboardLayout>
-      <CustomerDashboardContent />
-    </DashboardLayout>
-  )
+  // Note: Layout is automatically applied by Next.js from layout.tsx
+  return <CustomerDashboardContent />
 }
