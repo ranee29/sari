@@ -200,7 +200,7 @@ export default function AdminSidebar() {
         </div>
         <nav className="flex-grow p-4 pt-0 overflow-y-auto">
           <ul className="space-y-2">
-            {mainNavigation.map((item) => {
+            {mainNavigation.filter(item => item.name !== 'Orders').map((item) => {
               const Icon = item.icon
               const isExpanded = expandedItems.includes(item.name)
               const hasSubItems = item.subItems && item.subItems.length > 0
