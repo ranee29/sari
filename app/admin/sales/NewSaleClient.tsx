@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Plus, X, Search, ShoppingCart, Receipt, CreditCard, Smartphone, DollarSign } from 'lucide-react'
+import { Plus, X, Search, ShoppingCart, Receipt, CreditCard, Smartphone, DollarSign, Package, TrendingUp, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useToast } from '@/components/ui/use-toast'
@@ -39,6 +39,9 @@ export default function NewSaleClient() {
   const [isProcessing, setIsProcessing] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
   const [recentSale, setRecentSale] = useState<SaleRecord | null>(null)
+  const [showMobileCart, setShowMobileCart] = useState(false)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage] = useState(12)
   const { toast } = useToast()
 
   // Fetch products from API
@@ -63,58 +66,71 @@ export default function NewSaleClient() {
     fetchProducts()
   }, [toast])
 
-  // Filter products based on search
-  const filteredProducts = products.filter(product =>
-    product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    product.type.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  // Filter products based on search and exclude items already in cart
+  const filteredProducts = products.filter(product => {
+    const isInCart = cart.some(item => item.id === product.id)
+    const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         product.type.toLowerCase().includes(searchTerm.toLowerCase())
+    return !isInCart && matchesSearch
+  })
 
-  // Add product to cart with stock validation
-  const addToCart = (product: Product) => {
-    const existingItem = cart.find(item => item.id === product.id)
+  // Pagination logic
+  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const paginatedProducts = filteredProducts.slice(startIndex, endIndex)
 
-    if (existingItem) {
-      // Check if adding one more would exceed stock
-      const newQuantity = existingItem.quantity + 1
-      if (newQuantity > product.stock) {
-        toast({
-          title: 'Insufficient Stock',
-          description: `Only ${product.stock} ${product.name} available in stock`,
-          variant: 'destructive',
-        })
-        return
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchTerm, cart.length]) // Also reset when cart changes since it affects filtered products
+
+  // Generate page numbers for pagination
+  const getPageNumbers = () => {
+    const pages = []
+    const maxVisiblePages = 5
+
+    if (totalPages <= maxVisiblePages) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i)
       }
-
-      // Update quantity if item already in cart
-      setCart(cart.map(item =>
-        item.id === product.id
-          ? { ...item, quantity: newQuantity, subtotal: newQuantity * item.price }
-          : item
-      ))
     } else {
-      // Check if product is in stock
-      if (product.stock < 1) {
-        toast({
-          title: 'Out of Stock',
-          description: `${product.name} is currently out of stock`,
-          variant: 'destructive',
-        })
-        return
-      }
+      const start = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2))
+      const end = Math.min(totalPages, start + maxVisiblePages - 1)
 
-      // Add new item to cart
-      setCart([...cart, {
-        ...product,
-        cartId: Date.now().toString(),
-        quantity: 1,
-        subtotal: product.price
-      }])
+      for (let i = start; i <= end; i++) {
+        pages.push(i)
+      }
     }
+
+    return pages
+  }
+
+  // Add product to cart with default quantity of 1
+  const addToCart = (product: Product) => {
+    // Add new item to cart with default quantity
+    setCart([...cart, {
+      ...product,
+      cartId: Date.now().toString(),
+      quantity: 1,
+      subtotal: product.price
+    }])
+
+    toast({
+      title: 'Added to Cart',
+      description: `${product.name} has been added to your cart.`,
+    })
   }
 
   // Update item quantity in cart with stock validation
   const updateQuantity = (cartId: string, newQuantity: number) => {
-    if (newQuantity < 1) {
+    // Handle empty or invalid input
+    if (newQuantity === undefined || newQuantity === null || newQuantity < 0) {
+      return
+    }
+
+    // Remove item if quantity is 0
+    if (newQuantity === 0) {
       removeFromCart(cartId)
       return
     }
@@ -126,10 +142,11 @@ export default function NewSaleClient() {
     if (newQuantity > cartItem.stock) {
       toast({
         title: 'Insufficient Stock',
-        description: `Only ${cartItem.stock} ${cartItem.name} available in stock`,
+        description: `Only ${cartItem.stock} ${cartItem.name} available in stock. Adjusted to maximum available.`,
         variant: 'destructive',
       })
-      return
+      // Set to maximum available stock instead of rejecting
+      newQuantity = cartItem.stock
     }
 
     setCart(cart.map(item =>
@@ -307,9 +324,15 @@ export default function NewSaleClient() {
     <div className="min-h-screen p-4 lg:p-8 bg-background-light dark:bg-background-dark">
       <div className="grid w-full max-w-6xl grid-cols-1 gap-8 lg:grid-cols-3">
         {/* Products Section */}
-        <div className="lg:col-span-2">
+        <div className="w-full lg:col-span-2">
           <div className="rounded-lg bg-white p-6 shadow-sm dark:bg-zinc-900">
-              <h2 className="mb-4 text-xl font-semibold text-gray-900 dark:text-gray-100">Products</h2>
+              <div className="flex items-center gap-2 mb-4">
+                <ShoppingCart className="w-5 h-5 text-blue-600" />
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Products</h2>
+              </div>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                Select products to add them to your cart for bulk processing
+              </p>
 
               {/* Search Bar */}
               <div className="relative mb-6">
@@ -324,48 +347,111 @@ export default function NewSaleClient() {
 
               {/* Products Grid */}
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3">
-                {filteredProducts.map((product) => {
-                  const isInCart = cart.some(item => item.id === product.id)
-                  const cartItem = cart.find(item => item.id === product.id)
-
+                {paginatedProducts.map((product) => {
                   return (
                     <div
                       key={product.id}
-                      className={`cursor-pointer rounded-lg border-2 p-4 transition-all hover:shadow-md ${
-                        isInCart
-                          ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
-                          : 'border-gray-200 bg-white hover:border-green-500 hover:shadow-md dark:border-zinc-700 dark:bg-zinc-900 dark:hover:border-green-500'
-                      }`}
-                      onClick={() => addToCart(product)}
+                      className="rounded-lg border-2 border-gray-200 bg-white p-4 transition-all hover:border-gray-300 hover:shadow-md dark:border-zinc-700 dark:bg-zinc-900 dark:hover:border-zinc-600"
                     >
-                      <div className="flex items-start justify-between">
-                        <h3 className="font-semibold text-gray-900 dark:text-gray-100">{product.name}</h3>
-                        {isInCart && (
-                          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-green-500 text-xs font-bold text-white">
-                            {cartItem?.quantity || 0}
-                          </span>
-                        )}
+                      <div className="flex items-start justify-between mb-3">
+                        <h3 className="font-semibold text-gray-900 dark:text-gray-100 flex-1 pr-2">{product.name}</h3>
                       </div>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">{product.type}</p>
-                      <div className="mt-4 flex items-center justify-between">
-                        <p className="font-bold text-gray-900 dark:text-gray-100">₱{product.price.toFixed(2)}</p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">Stock: {product.stock}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">{product.type}</p>
+
+                      <div className="flex items-center justify-between mb-3">
+                        <div>
+                          <p className="font-bold text-gray-900 dark:text-gray-100">₱{product.price.toFixed(2)}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">Stock: {product.stock}</p>
+                        </div>
                       </div>
+
+                      <button
+                        onClick={() => addToCart(product)}
+                        disabled={product.stock === 0}
+                        className={`w-full py-2 px-3 rounded-md text-sm font-medium transition-colors ${
+                          product.stock === 0
+                            ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                            : 'bg-blue-600 text-white hover:bg-blue-700'
+                        }`}
+                      >
+                        {product.stock === 0 ? 'Out of Stock' : 'Add to Cart'}
+                      </button>
                     </div>
                   )
                 })}
               </div>
 
-              {filteredProducts.length === 0 && (
+              {paginatedProducts.length === 0 && (
                 <div className="text-center py-8">
-                  <p className="text-gray-500">No products found</p>
+                  {searchTerm ? (
+                    <div>
+                      <p className="text-gray-500">No products found matching "{searchTerm}"</p>
+                      <p className="text-sm text-gray-400 mt-1">Try a different search term</p>
+                    </div>
+                  ) : cart.length > 0 ? (
+                    <div>
+                      <p className="text-gray-500">All available products are in your cart</p>
+                      <p className="text-sm text-gray-400 mt-1">Check your cart to manage items</p>
+                    </div>
+                  ) : (
+                    <div>
+                      <p className="text-gray-500">No products available</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 pt-6 border-t border-gray-200 dark:border-zinc-700">
+                  <div className="text-sm text-gray-600 dark:text-gray-400 order-2 sm:order-1">
+                    Showing {startIndex + 1} to {Math.min(endIndex, filteredProducts.length)} of {filteredProducts.length} products
+                  </div>
+
+                  <div className="flex items-center gap-2 order-1 sm:order-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                      disabled={currentPage === 1}
+                      className="px-3 py-1"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                      <span className="hidden sm:inline ml-1">Previous</span>
+                    </Button>
+
+                    <div className="flex gap-1">
+                      {getPageNumbers().map((pageNum) => (
+                        <Button
+                          key={pageNum}
+                          variant={currentPage === pageNum ? "primary" : "outline"}
+                          size="sm"
+                          onClick={() => setCurrentPage(pageNum)}
+                          className="px-3 py-1 min-w-[2.5rem]"
+                        >
+                          {pageNum}
+                        </Button>
+                      ))}
+                    </div>
+
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                      disabled={currentPage === totalPages}
+                      className="px-3 py-1"
+                    >
+                      <span className="hidden sm:inline mr-1">Next</span>
+                      <ChevronRight className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Cart Section */}
-          <div className="lg:col-span-1">
+          {/* Cart Section - Desktop Only */}
+          <div className="hidden lg:block lg:col-span-1">
             <div className="rounded-lg bg-white p-6 shadow-sm dark:bg-zinc-900">
               <div className="mb-6 flex items-center gap-2">
                 <ShoppingCart className="text-gray-600" />
@@ -376,56 +462,72 @@ export default function NewSaleClient() {
                 <div className="text-center py-8">
                   <ShoppingCart className="w-12 h-12 text-gray-300 mx-auto mb-2" />
                   <p className="text-gray-500">Cart is empty</p>
-                  <p className="text-sm text-gray-400 mt-1">Click on products to add them</p>
+                  <p className="text-sm text-gray-400 mt-1">Click on "Add to Cart" buttons to add products</p>
                 </div>
               ) : (
                 <>
                   {/* Cart Items */}
                   <div className="space-y-4 mb-6">
                     {cart.map((item) => (
-                      <div key={item.cartId} className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <p className="font-medium text-gray-900">{item.name}</p>
-                          <p className="text-sm text-gray-500">{item.quantity} x ₱{item.price.toFixed(2)}</p>
-                          <p className={`text-xs ${item.stock <= item.quantity ? 'text-red-600 font-medium' : 'text-gray-400'}`}>
-                            Stock: {item.stock} {item.stock <= item.quantity ? '(At Limit)' : ''}
-                          </p>
+                      <div key={item.cartId} className="border border-gray-200 rounded-lg p-3 dark:border-zinc-700">
+                        <div className="flex items-start justify-between mb-2">
+                          <div className="flex-1">
+                            <p className="font-medium text-gray-900">{item.name}</p>
+                            <p className="text-sm text-gray-500">{item.type}</p>
+                            <p className="text-sm font-medium text-gray-700">₱{item.price.toFixed(2)} each</p>
+                          </div>
+                          <button
+                            onClick={() => removeFromCart(item.cartId)}
+                            className="flex h-6 w-6 items-center justify-center rounded-md bg-red-100 text-red-500 transition hover:bg-red-200"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
                         </div>
-                        <div className="flex items-center gap-4">
-                          <p className="font-semibold text-gray-900">₱{item.subtotal.toFixed(2)}</p>
-                          <div className="flex items-center gap-1">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                updateQuantity(item.cartId, item.quantity - 1)
-                              }}
-                              className="flex h-7 w-7 items-center justify-center rounded-md bg-gray-100 text-gray-600 transition hover:bg-gray-200"
-                            >
-                              -
-                            </button>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                updateQuantity(item.cartId, item.quantity + 1)
-                              }}
-                              disabled={item.quantity >= item.stock}
-                              className={`flex h-7 w-7 items-center justify-center rounded-md transition ${
-                                item.quantity >= item.stock
-                                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                              }`}
-                            >
-                              +
-                            </button>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                removeFromCart(item.cartId)
-                              }}
-                              className="flex h-7 w-7 items-center justify-center rounded-md bg-red-100 text-red-500 transition hover:bg-red-200"
-                            >
-                              ×
-                            </button>
+
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <label className="text-xs text-gray-600">Quantity:</label>
+                            <div className="flex items-center gap-1">
+                              <button
+                                onClick={() => updateQuantity(item.cartId, item.quantity - 1)}
+                                disabled={item.quantity <= 1}
+                                className={`flex h-6 w-6 items-center justify-center rounded text-xs transition ${
+                                  item.quantity <= 1
+                                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                }`}
+                              >
+                                -
+                              </button>
+                              <input
+                                type="number"
+                                min="0"
+                                max={item.stock}
+                                value={item.quantity}
+                                onChange={(e) => {
+                                  const value = parseInt(e.target.value) || 0
+                                  updateQuantity(item.cartId, value)
+                                }}
+                                className="w-12 h-6 text-center text-xs border border-gray-300 rounded dark:border-zinc-600 dark:bg-zinc-800"
+                              />
+                              <button
+                                onClick={() => updateQuantity(item.cartId, item.quantity + 1)}
+                                disabled={item.quantity >= item.stock}
+                                className={`flex h-6 w-6 items-center justify-center rounded text-xs transition ${
+                                  item.quantity >= item.stock
+                                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                }`}
+                              >
+                                +
+                              </button>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-semibold text-gray-900">₱{item.subtotal.toFixed(2)}</p>
+                            <p className={`text-xs ${item.stock <= item.quantity ? 'text-red-600 font-medium' : 'text-gray-400'}`}>
+                              Stock: {item.stock}
+                            </p>
                           </div>
                         </div>
                       </div>
@@ -483,6 +585,166 @@ export default function NewSaleClient() {
             </div>
           </div>
       </div>
+
+      {/* Floating Cart Button - Mobile Only */}
+      <button
+        onClick={() => setShowMobileCart(true)}
+        className={`lg:hidden fixed bottom-6 right-6 z-50 text-white p-4 rounded-full shadow-lg transition-colors ${
+          cartTotalItems > 0 ? 'bg-green-500 hover:bg-green-600' : 'bg-gray-600 hover:bg-gray-700'
+        }`}
+        aria-label="View cart"
+      >
+        <ShoppingCart className="w-6 h-6" />
+        {cartTotalItems > 0 && (
+          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+            {cartTotalItems > 99 ? '99+' : cartTotalItems}
+          </span>
+        )}
+      </button>
+
+      {/* Mobile Cart Modal */}
+      {showMobileCart && (
+        <div className="lg:hidden fixed inset-0 z-50">
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={() => setShowMobileCart(false)}
+          />
+
+          {/* Cart Panel */}
+          <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-zinc-900 rounded-t-2xl shadow-2xl max-h-[80vh] overflow-hidden flex flex-col">
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-zinc-700">
+              <div className="flex items-center gap-2">
+                <ShoppingCart className="text-green-600" />
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Cart ({cartTotalItems})</h2>
+              </div>
+              <button
+                onClick={() => setShowMobileCart(false)}
+                className="p-2 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Cart Items */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+              {cart.map((item) => (
+                <div key={item.cartId} className="border border-gray-200 dark:border-zinc-700 rounded-lg p-3">
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex-1">
+                      <p className="font-medium text-gray-900 dark:text-gray-100">{item.name}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">{item.type}</p>
+                      <p className="text-sm font-medium text-gray-700 dark:text-gray-300">₱{item.price.toFixed(2)} each</p>
+                    </div>
+                    <button
+                      onClick={() => removeFromCart(item.cartId)}
+                      className="flex h-6 w-6 items-center justify-center rounded-md bg-red-100 text-red-500 transition hover:bg-red-200"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <label className="text-xs text-gray-600 dark:text-gray-400">Quantity:</label>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => updateQuantity(item.cartId, item.quantity - 1)}
+                          disabled={item.quantity <= 1}
+                          className={`flex h-6 w-6 items-center justify-center rounded text-xs transition ${
+                            item.quantity <= 1
+                              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                          }`}
+                        >
+                          -
+                        </button>
+                        <input
+                          type="number"
+                          min="0"
+                          max={item.stock}
+                          value={item.quantity}
+                          onChange={(e) => {
+                            const value = parseInt(e.target.value) || 0
+                            updateQuantity(item.cartId, value)
+                          }}
+                          className="w-12 h-6 text-center text-xs border border-gray-300 rounded dark:border-zinc-600 dark:bg-zinc-800"
+                        />
+                        <button
+                          onClick={() => updateQuantity(item.cartId, item.quantity + 1)}
+                          disabled={item.quantity >= item.stock}
+                          className={`flex h-6 w-6 items-center justify-center rounded text-xs transition ${
+                            item.quantity >= item.stock
+                              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                          }`}
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-semibold text-gray-900 dark:text-gray-100">₱{item.subtotal.toFixed(2)}</p>
+                      <p className={`text-xs ${item.stock <= item.quantity ? 'text-red-600 font-medium' : 'text-gray-400'}`}>
+                        Stock: {item.stock}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Payment Methods */}
+            <div className="p-4 border-t border-gray-200 dark:border-zinc-700">
+              <h3 className="mb-3 text-sm font-medium text-gray-600 dark:text-gray-400">Payment Method</h3>
+              <div className="grid grid-cols-2 gap-2">
+                {paymentMethods.map((method) => {
+                  const Icon = method.icon
+                  return (
+                    <button
+                      key={method.value}
+                      onClick={() => setPaymentMethod(method.value)}
+                      className={`flex items-center justify-center gap-1 rounded-md border-2 p-2 text-xs font-semibold transition ${
+                        paymentMethod === method.value
+                          ? 'border-green-500 bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400'
+                          : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50 dark:border-zinc-700 dark:hover:border-zinc-600 dark:hover:bg-zinc-800'
+                      }`}
+                    >
+                      <Icon className="!text-sm" />
+                      {method.label}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Total and Process Button */}
+            <div className="p-4 border-t border-gray-200 dark:border-zinc-700 space-y-3">
+              <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400">
+                <p>Subtotal ({cartTotalItems} items):</p>
+                <p className="font-medium text-gray-700 dark:text-gray-300">₱{cartTotal.toFixed(2)}</p>
+              </div>
+              <div className="flex justify-between font-bold text-gray-800 dark:text-gray-100">
+                <p>Total:</p>
+                <p className="text-green-500">₱{cartTotal.toFixed(2)}</p>
+              </div>
+
+              <button
+                onClick={() => {
+                  setShowMobileCart(false)
+                  processSale()
+                }}
+                disabled={isProcessing || cart.length === 0}
+                className="w-full flex items-center justify-center gap-2 rounded-lg bg-green-500 py-3 font-semibold text-white transition hover:bg-green-600 disabled:opacity-50 disabled:hover:bg-green-500"
+              >
+                <ShoppingCart className="w-4 h-4" />
+                {isProcessing ? 'Processing...' : 'Process Sale'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

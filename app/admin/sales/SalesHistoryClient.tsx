@@ -104,6 +104,7 @@ export default function SalesHistoryClient() {
   const totalSales = filteredSales.reduce((sum, sale) => sum + sale.subtotal, 0)
   const totalItems = filteredSales.reduce((sum, sale) => sum + sale.qty, 0)
   const totalTransactions = filteredSales.length
+  const averageSale = totalTransactions > 0 ? totalSales / totalTransactions : 0
 
   // Payment method stats
   const paymentStats = filteredSales.reduce((stats, sale) => {
@@ -171,7 +172,7 @@ export default function SalesHistoryClient() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
           <div className="bg-white rounded-lg border border-gray-200 p-4">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
@@ -198,25 +199,13 @@ export default function SalesHistoryClient() {
 
           <div className="bg-white rounded-lg border border-gray-200 p-4">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                <Calendar className="w-6 h-6 text-purple-600" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Transactions</p>
-                <p className="text-xl font-bold text-gray-900">{totalTransactions}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg border border-gray-200 p-4">
-            <div className="flex items-center gap-3">
               <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
                 <DollarSign className="w-6 h-6 text-yellow-600" />
               </div>
               <div>
                 <p className="text-sm text-gray-600">Average Sale</p>
                 <p className="text-xl font-bold text-gray-900">
-                  ₱{totalTransactions > 0 ? (totalSales / totalTransactions).toFixed(2) : '0.00'}
+                  ₱{averageSale.toFixed(2)}
                 </p>
               </div>
             </div>
@@ -267,28 +256,6 @@ export default function SalesHistoryClient() {
                 <option value="all">All Time</option>
               </select>
             </div>
-          </div>
-        </div>
-
-        {/* Payment Breakdown */}
-        <div className="bg-white rounded-lg border border-gray-200 p-4 mb-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Payment Method Breakdown</h3>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            {Object.entries(paymentStats).map(([method, amount]) => {
-              const Icon = paymentIcons[method as keyof typeof paymentIcons]
-              const percentage = totalSales > 0 ? (amount / totalSales * 100).toFixed(1) : '0'
-
-              return (
-                <div key={method} className="text-center">
-                  <div className="flex items-center justify-center gap-2 mb-1">
-                    {Icon && <Icon className="w-4 h-4 text-gray-600" />}
-                    <span className="text-sm text-gray-600 capitalize">{method}</span>
-                  </div>
-                  <p className="font-semibold text-lg">₱{amount.toFixed(2)}</p>
-                  <p className="text-xs text-gray-500">{percentage}%</p>
-                </div>
-              )
-            })}
           </div>
         </div>
 
