@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo, useEffect } from 'react'
-import { Plus, Search, Filter, MoreHorizontal, Package, Edit, Trash2, X, Loader2 } from 'lucide-react'
+import { Plus, Search, Filter, MoreHorizontal, Package, Edit, Trash2, X, Loader2, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useToast } from '@/components/ui/use-toast'
@@ -44,6 +44,8 @@ export default function ProductsList({ initialProducts }: ProductsListProps) {
   const [products, setProducts] = useState<Product[]>(initialProducts)
   const [productTypes, setProductTypes] = useState<ProductType[]>([])
   const [isLoadingTypes, setIsLoadingTypes] = useState(true)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage] = useState(10)
   const { toast } = useToast()
 
   // Fetch product types from API
@@ -174,6 +176,38 @@ export default function ProductsList({ initialProducts }: ProductsListProps) {
     })
   }, [products, searchTerm, filterCategory])
 
+  // Pagination logic
+  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const paginatedProducts = filteredProducts.slice(startIndex, endIndex)
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchTerm, filterCategory])
+
+  // Generate page numbers for pagination
+  const getPageNumbers = () => {
+    const pages = []
+    const maxVisiblePages = 5
+
+    if (totalPages <= maxVisiblePages) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i)
+      }
+    } else {
+      const start = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2))
+      const end = Math.min(totalPages, start + maxVisiblePages - 1)
+
+      for (let i = start; i <= end; i++) {
+        pages.push(i)
+      }
+    }
+
+    return pages
+  }
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'In Stock':
@@ -245,7 +279,7 @@ export default function ProductsList({ initialProducts }: ProductsListProps) {
 
         {/* Mobile Product Cards */}
         <div className="block sm:hidden space-y-4 mb-6">
-          {filteredProducts.map((product) => (
+          {paginatedProducts.map((product) => (
             <div key={product.id} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -335,7 +369,7 @@ export default function ProductsList({ initialProducts }: ProductsListProps) {
               </tr>
             </thead>
             <tbody>
-              {filteredProducts.map((product) => (
+              {paginatedProducts.map((product) => (
                 <tr key={product.id} className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50">
                   <td className="py-3 px-4">
                     <div className="flex items-center gap-2">
@@ -395,6 +429,53 @@ export default function ProductsList({ initialProducts }: ProductsListProps) {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 px-2">
+            <div className="text-sm text-gray-600 dark:text-gray-400 order-2 sm:order-1">
+              Showing {startIndex + 1} to {Math.min(endIndex, filteredProducts.length)} of {filteredProducts.length} products
+            </div>
+
+            <div className="flex items-center gap-2 order-1 sm:order-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-1"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                <span className="hidden sm:inline ml-1">Previous</span>
+              </Button>
+
+              <div className="flex gap-1">
+                {getPageNumbers().map((pageNum) => (
+                  <Button
+                    key={pageNum}
+                    variant={currentPage === pageNum ? "primary" : "outline"}
+                    size="sm"
+                    onClick={() => setCurrentPage(pageNum)}
+                    className="px-3 py-1 min-w-[2.5rem]"
+                  >
+                    {pageNum}
+                  </Button>
+                ))}
+              </div>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages}
+                className="px-3 py-1"
+              >
+                <span className="hidden sm:inline mr-1">Next</span>
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+        )}
 
         {filteredProducts.length === 0 && (
           <div className="text-center py-8 sm:py-12">
