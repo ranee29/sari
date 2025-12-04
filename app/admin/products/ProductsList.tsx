@@ -1,10 +1,13 @@
 'use client'
 
 import { useState, useMemo, useEffect } from 'react'
-import { Plus, Search, Filter, MoreHorizontal, Package, Edit, Trash2, X } from 'lucide-react'
+import { Plus, Search, Filter, MoreHorizontal, Package, Edit, Trash2, X, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { useToast } from '@/components/ui/use-toast'
 import AddProductModal from './AddProductModal'
+import EditProductModal from './EditProductModal'
+import DeleteConfirmModal from './DeleteConfirmModal'
 
 interface Product {
   id: string
@@ -17,6 +20,7 @@ interface Product {
   status: string
   created_at: string
   updated_at?: string
+  product_types?: ProductType  // Optional nested product type data from API
 }
 
 interface ProductsListProps {
@@ -32,9 +36,15 @@ export default function ProductsList({ initialProducts }: ProductsListProps) {
   const [searchTerm, setSearchTerm] = useState('')
   const [filterCategory, setFilterCategory] = useState('all')
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null)
+  const [deletingProductId, setDeletingProductId] = useState<string | null>(null)
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [productToDelete, setProductToDelete] = useState<{ id: string; name: string } | null>(null)
   const [products, setProducts] = useState<Product[]>(initialProducts)
   const [productTypes, setProductTypes] = useState<ProductType[]>([])
   const [isLoadingTypes, setIsLoadingTypes] = useState(true)
+  const { toast } = useToast()
 
   // Fetch product types from API
   useEffect(() => {
@@ -61,6 +71,98 @@ export default function ProductsList({ initialProducts }: ProductsListProps) {
   const categories = useMemo(() => {
     return productTypes.map(type => type.name)
   }, [productTypes])
+
+  // Edit handler
+  const handleEdit = (product: Product) => {
+    setEditingProduct(product)
+    setIsEditModalOpen(true)
+  }
+
+  // Delete handler - shows confirmation modal
+  const handleDelete = (productId: string, productName: string) => {
+    setProductToDelete({ id: productId, name: productName })
+    setIsDeleteModalOpen(true)
+  }
+
+  // Execute actual delete
+  const handleDeleteConfirm = async (productId: string, productName: string) => {
+    try {
+      const response = await fetch(`/api/admin/products/${productId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to delete product')
+      }
+
+      // Remove product from state
+      setProducts(prev => prev.filter(p => p.id !== productId))
+
+      // Close delete modal
+      setIsDeleteModalOpen(false)
+      setProductToDelete(null)
+
+      toast({
+        title: 'Success',
+        description: `${productName} deleted successfully`,
+      })
+    } catch (error) {
+      console.error('Error deleting product:', error)
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to delete product',
+        variant: 'destructive',
+      })
+    } finally {
+      setDeletingProductId(null)
+    }
+  }
+
+  // Cancel delete
+  const handleDeleteCancel = () => {
+    setDeletingProductId(null)
+  }
+
+  // Refresh data after successful edit
+  const handleEditSuccess = async (updatedProduct: Product) => {
+    console.log('handleEditSuccess called with:', updatedProduct)
+
+    // Validate the updated product before proceeding
+    if (!updatedProduct || !updatedProduct.id) {
+      console.error('Invalid updated product:', updatedProduct)
+      toast({
+        title: 'Error',
+        description: 'Invalid product data received',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    try {
+      // Update product in state
+      setProducts(prev =>
+        prev.map(p => p.id === updatedProduct.id ? { ...updatedProduct, type: updatedProduct.type || updatedProduct.product_types?.name || '' } : p)
+      )
+      setIsEditModalOpen(false)
+      setEditingProduct(null)
+
+      toast({
+        title: 'Success',
+        description: `${updatedProduct.name || 'Product'} updated successfully`,
+      })
+    } catch (error) {
+      console.error('Error in handleEditSuccess:', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to update product in list',
+        variant: 'destructive',
+      })
+    }
+  }
 
   // Filter products based on search and category
   const filteredProducts = useMemo(() => {
@@ -186,11 +288,30 @@ export default function ProductsList({ initialProducts }: ProductsListProps) {
               <div className="flex items-center justify-between pt-3 border-t border-gray-100 dark:border-gray-700">
                 <p className="text-xs text-gray-500 dark:text-gray-400">{product.created_at}</p>
                 <div className="flex items-center gap-1">
-                  <Button variant="ghost" size="sm" className="p-1 h-8 w-8">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="p-1 h-8 w-8"
+                    onClick={() => handleEdit(product)}
+                    disabled={deletingProductId === product.id}
+                  >
                     <Edit className="w-4 h-4" />
                   </Button>
-                  <Button variant="ghost" size="sm" className="p-1 h-8 w-8 text-red-600 hover:text-red-700">
-                    <Trash2 className="w-4 h-4" />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="p-1 h-8 w-8 text-red-600 hover:text-red-700"
+                    onClick={() => {
+                      setProductToDelete({ id: product.id, name: product.name })
+                      setIsDeleteModalOpen(true)
+                    }}
+                    disabled={deletingProductId === product.id || productToDelete !== null}
+                  >
+                    {deletingProductId === product.id ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Trash2 className="w-4 h-4" />
+                    )}
                   </Button>
                 </div>
               </div>
@@ -242,11 +363,30 @@ export default function ProductsList({ initialProducts }: ProductsListProps) {
                   <td className="py-3 px-4 text-gray-600 dark:text-gray-400 text-sm">{product.created_at}</td>
                   <td className="py-3 px-4">
                     <div className="flex items-center gap-2">
-                      <Button variant="ghost" size="sm" className="p-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="p-1"
+                        onClick={() => handleEdit(product)}
+                        disabled={deletingProductId === product.id}
+                      >
                         <Edit className="w-4 h-4" />
                       </Button>
-                      <Button variant="ghost" size="sm" className="p-1 text-red-600 hover:text-red-700">
-                        <Trash2 className="w-4 h-4" />
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="p-1 text-red-600 hover:text-red-700"
+                        onClick={() => {
+                          setProductToDelete(product)
+                          setIsDeleteModalOpen(true)
+                        }}
+                        disabled={deletingProductId === product.id}
+                      >
+                        {deletingProductId === product.id ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Trash2 className="w-4 h-4" />
+                        )}
                       </Button>
                     </div>
                   </td>
@@ -300,6 +440,31 @@ export default function ProductsList({ initialProducts }: ProductsListProps) {
               window.location.reload()
             }
           }}
+        />
+
+        {/* Edit Product Modal */}
+        <EditProductModal
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          product={editingProduct}
+          productTypes={productTypes}
+          onSuccess={handleEditSuccess}
+        />
+
+        {/* Delete Confirmation Modal */}
+        <DeleteConfirmModal
+          isOpen={isDeleteModalOpen}
+          onClose={() => {
+            setIsDeleteModalOpen(false)
+            setProductToDelete(null)
+          }}
+          onConfirm={() => {
+            if (productToDelete) {
+              handleDeleteConfirm(productToDelete.id, productToDelete.name)
+            }
+          }}
+          productName={productToDelete?.name || ''}
+          isLoading={deletingProductId === productToDelete?.id}
         />
       </div>
     </div>
